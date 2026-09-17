@@ -15,6 +15,27 @@ class Api::VisitorsControllerTest < ActionDispatch::IntegrationTest
     assert data.length <= 20
   end
 
+  test "GET /api/visitors loads hosts without an N+1 query" do
+    Visitor.create!(
+      full_name: "Another Visitor",
+      company_name: "Another Co",
+      purpose: "Demo",
+      checked_in_at: 1.hour.ago,
+      host: hosts(:benjamin)
+    )
+
+    queries = []
+    subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |_name, _start, _finish, _id, payload|
+      queries << payload[:sql] if payload[:name] =~ /Load/ && payload[:sql].include?("SELECT")
+    end
+
+    get "/api/visitors"
+
+    ActiveSupport::Notifications.unsubscribe(subscriber)
+    assert_response :success
+    assert_equal 2, queries.length
+  end
+
   test "POST /api/visitors creates a visitor" do
     assert_difference "Visitor.count", 1 do
       post "/api/visitors",
