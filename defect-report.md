@@ -23,3 +23,26 @@ The deactivated visitor should not be returned by the active visitor list becaus
 
 **Actual Result:**
 The deactivated visitor is still returned by `GET /api/visitors` even though its `active` value is `false` and its `checked_out_at` value remains `nil`.
+
+## Defect 2: Visitor list performs N+1 host queries
+
+**Summary:** The visitor list loads each visitor's host with a separate database query.
+
+**Type:** Performance
+
+**Description:**
+The `index` action in `api/app/controllers/api/visitors_controller.rb` serializes each visitor's `host_name` through the `visitor.host` association. Without eager loading, Active Record performs one additional host query for each visitor returned. A page containing 20 visitors therefore performs one query for the visitor list plus up to 20 additional host queries, instead of loading the hosts in a single query.
+
+**Steps to Reproduce:**
+
+1. Start the Rails API using `rails s`.
+2. Ensure there are multiple active visitors with hosts.
+3. Send a `GET` request to `/api/visitors?page=1`.
+4. Inspect the Rails development log or SQL notifications for the request.
+5. Count the database queries used to load the visitors and their hosts.
+
+**Expected Result:**
+The visitor list should eager-load the host association and use one query for visitors plus one query for the required hosts, regardless of the number of visitors on the page.
+
+**Actual Result:**
+The visitor list performs one host query per visitor while serializing `host_name`. In the observed 20-record page, the request generated 21 Active Record queries, including repeated `Host Load` queries.
