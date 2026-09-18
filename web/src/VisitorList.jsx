@@ -2,7 +2,11 @@ import { useState, useEffect } from "react";
 import { getVisitors, checkOut } from "./api";
 
 function formatTime(isoString) {
-  return new Date(isoString).toISOString().slice(11, 16);
+  return new Date(isoString).toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
 export default function VisitorList({ onRefresh }) {

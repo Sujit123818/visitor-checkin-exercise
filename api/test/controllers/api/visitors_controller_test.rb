@@ -76,6 +76,22 @@ class Api::VisitorsControllerTest < ActionDispatch::IntegrationTest
     assert data.any? { |v| v["full_name"].include?("Jane") }
   end
 
+  test "GET /api/visitors/search excludes deactivated visitors" do
+    inactive_visitor = Visitor.create!(
+      full_name: "Jane Inactive",
+      company_name: "Inactive Co",
+      purpose: "Former visit",
+      active: false,
+      host: hosts(:alice)
+    )
+
+    get "/api/visitors/search?q=Jane"
+
+    assert_response :success
+    data = JSON.parse(response.body)
+    assert_not_includes data.map { |visitor| visitor["id"] }, inactive_visitor.id
+  end
+
   test "GET /api/visitors index includes checked_out visitor in list" do
     get "/api/visitors?page=1"
     assert_response :success
