@@ -157,3 +157,6 @@ The row is removed immediately, no error is shown, and a later refresh reveals t
 ## Assumptions and Unspecified Behavior
 
 The report does not classify duplicate registrations, empty search queries, invalid page numbers, or the exact response shape for validation errors as defects because the provided requirements do not define their behavior.
+
+
+Note: I used AI to write this description more accurately and precisely.
